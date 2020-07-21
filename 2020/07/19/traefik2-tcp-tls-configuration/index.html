@@ -22,34 +22,41 @@
     var CONFIG = {"hostname":"byc.github.io","root":"/","scheme":"Pisces","version":"7.8.0","exturl":false,"sidebar":{"position":"left","display":"post","padding":18,"offset":12,"onmobile":false},"copycode":{"enable":true,"show_result":true,"style":"mac"},"back2top":{"enable":true,"sidebar":false,"scrollpercent":true},"bookmark":{"enable":false,"color":"#222","save":"auto"},"fancybox":false,"mediumzoom":false,"lazyload":false,"pangu":false,"comments":{"style":"tabs","active":null,"storage":true,"lazyload":false,"nav":null},"algolia":{"hits":{"per_page":10},"labels":{"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}},"localsearch":{"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},"motion":{"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}};
   </script>
 
-  <meta name="description" content="分享关于Linux、Kubernetes、龙芯以及其他任何技术相关的东西，看着更新">
-<meta property="og:type" content="website">
-<meta property="og:title" content="卡车斯基">
-<meta property="og:url" content="http://byc.github.io/index.html">
+  <meta name="description" content="Traefik是一款主流的反向代理服务器以及负载均衡器，其有着强大的功能和性能，是CNCF中的一员。在Kubernetes集群中，Traefik可以被用做Ingress Controller用来访问集群内部服务。从Traefik 2.0版本开始支持TCP协议以及基于SNI的路由配置。本文介绍了Traefik在Kubernetes集群中的部署，并用一个实例演示如何通过服务名称访问集群中的TCP服务。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Traefik2 tcp over tls 配置">
+<meta property="og:url" content="http://byc.github.io/2020/07/19/traefik2-tcp-tls-configuration/index.html">
 <meta property="og:site_name" content="卡车斯基">
-<meta property="og:description" content="分享关于Linux、Kubernetes、龙芯以及其他任何技术相关的东西，看着更新">
+<meta property="og:description" content="Traefik是一款主流的反向代理服务器以及负载均衡器，其有着强大的功能和性能，是CNCF中的一员。在Kubernetes集群中，Traefik可以被用做Ingress Controller用来访问集群内部服务。从Traefik 2.0版本开始支持TCP协议以及基于SNI的路由配置。本文介绍了Traefik在Kubernetes集群中的部署，并用一个实例演示如何通过服务名称访问集群中的TCP服务。">
 <meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://i.loli.net/2020/07/21/FyAiIBZ95UCqc7K.png">
+<meta property="og:image" content="https://i.loli.net/2020/07/21/2NgGultaS7hRjTK.png">
+<meta property="og:image" content="https://i.loli.net/2020/07/20/5MlsAGVFLkTNwPQ.png">
+<meta property="og:image" content="https://i.loli.net/2020/07/20/zJjCOMk3XnpctIS.jpg">
+<meta property="og:image" content="https://i.loli.net/2020/07/20/XL6vqJHkIF7T4YR.png">
+<meta property="article:published_time" content="2020-07-19T02:53:36.000Z">
+<meta property="article:modified_time" content="2020-07-21T15:22:55.536Z">
 <meta property="article:author" content="BYC">
-<meta property="article:tag" content="linux">
-<meta property="article:tag" content="kubernetes">
-<meta property="article:tag" content="loongson">
-<meta property="article:tag" content="龙芯">
+<meta property="article:tag" content="traefik">
+<meta property="article:tag" content="tls">
+<meta property="article:tag" content="tcp">
 <meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://i.loli.net/2020/07/21/FyAiIBZ95UCqc7K.png">
 
-<link rel="canonical" href="http://byc.github.io/">
+<link rel="canonical" href="http://byc.github.io/2020/07/19/traefik2-tcp-tls-configuration/">
 
 
 <script id="page-configurations">
   // https://hexo.io/docs/variables.html
   CONFIG.page = {
     sidebar: "",
-    isHome : true,
-    isPost : false,
+    isHome : false,
+    isPost : true,
     lang   : 'zh-CN'
   };
 </script>
 
-  <title>卡车斯基</title>
+  <title>Traefik2 tcp over tls 配置 | 卡车斯基</title>
   
 
 
@@ -163,9 +170,10 @@
         <div class="content-wrap">
           
 
-          <div class="content index posts-expand">
+          <div class="content post posts-expand">
             
-      
+
+    
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
@@ -181,10 +189,9 @@
       <meta itemprop="name" content="卡车斯基">
     </span>
       <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/19/traefik2-tcp-tls-configuration/" class="post-title-link" itemprop="url">Traefik2 tcp over tls 配置</a>
-        </h2>
+        <h1 class="post-title" itemprop="name headline">
+          Traefik2 tcp over tls 配置
+        </h1>
 
         <div class="post-meta">
             <span class="post-meta-item">
@@ -245,7 +252,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-          <p><code>Traefik</code>是一款主流的反向代理服务器以及负载均衡器，其有着强大的功能和性能，是<a href="https://landscape.cncf.io/selected=traefik" target="_blank" rel="noopener">CNCF</a>中的一员。在<code>Kubernetes</code>集群中，<code>Traefik</code>可以被用做<code>Ingress Controller</code>用来访问集群内部服务。从<code>Traefik 2.0</code>版本开始支持<code>TCP</code>协议以及基于<code>SNI</code>的路由配置。本文介绍了<code>Traefik</code>在<code>Kubernetes</code>集群中的部署，并用一个实例演示如何通过服务名称访问集群中的<code>TCP</code>服务。</p>
+        <p><code>Traefik</code>是一款主流的反向代理服务器以及负载均衡器，其有着强大的功能和性能，是<a href="https://landscape.cncf.io/selected=traefik" target="_blank" rel="noopener">CNCF</a>中的一员。在<code>Kubernetes</code>集群中，<code>Traefik</code>可以被用做<code>Ingress Controller</code>用来访问集群内部服务。从<code>Traefik 2.0</code>版本开始支持<code>TCP</code>协议以及基于<code>SNI</code>的路由配置。本文介绍了<code>Traefik</code>在<code>Kubernetes</code>集群中的部署，并用一个实例演示如何通过服务名称访问集群中的<code>TCP</code>服务。</p>
 <h2 id="部署Traefik"><a href="#部署Traefik" class="headerlink" title="部署Traefik"></a>部署Traefik</h2><p>示例中的集群有3个工作节点，以<code>Deployment</code>部署<code>Traefik</code>，<code>pod</code>副本数为2个。通过绑定主机端口将<code>Traefik</code>暴露给集群外部，并通过<code>keepalived</code>保证高可用：</p>
 <div align="center"><img src="https://i.loli.net/2020/07/21/FyAiIBZ95UCqc7K.png" width="70%"></div>
 
@@ -324,145 +331,59 @@
 
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p><code>Traefik</code>是一款优秀的反向代理服务器，在2.0版本实现了对<code>TCP</code>协议的支持。配合<code>TLS</code>扩展协议，使<code>TCP</code>通信中也能携带类似于<code>http header</code>的额外信息，从而实现了可配置的路由功能。</p>
 
-      
     </div>
 
     
     
     
+        
+
+<div>
+<ul class="post-copyright">
+  <li class="post-copyright-author">
+    <strong>本文作者： </strong>BYC
+  </li>
+  <li class="post-copyright-link">
+    <strong>本文链接：</strong>
+    <a href="http://byc.github.io/2020/07/19/traefik2-tcp-tls-configuration/" title="Traefik2 tcp over tls 配置">http://byc.github.io/2020/07/19/traefik2-tcp-tls-configuration/</a>
+  </li>
+  <li class="post-copyright-license">
+    <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
+  </li>
+</ul>
+</div>
+
+
       <footer class="post-footer">
-        <div class="post-eof"></div>
-      </footer>
-  </article>
-  
-  
-  
+          <div class="post-tags">
+              <a href="/tags/traefik/" rel="tag"># traefik</a>
+              <a href="/tags/tls/" rel="tag"># tls</a>
+              <a href="/tags/tcp/" rel="tag"># tcp</a>
+          </div>
 
-      
-  
-  
-  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
-    <link itemprop="mainEntityOfPage" href="http://byc.github.io/2020/07/01/linux-extend-memory-using-swapfile/">
+        
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="image" content="/images/avatar.png">
-      <meta itemprop="name" content="BYC">
-      <meta itemprop="description" content="分享关于Linux、Kubernetes、龙芯以及其他任何技术相关的东西，看着更新">
-    </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="卡车斯基">
-    </span>
-      <header class="post-header">
-        <h2 class="post-title" itemprop="name headline">
-          
-            <a href="/2020/07/01/linux-extend-memory-using-swapfile/" class="post-title-link" itemprop="url">Linux利用swapfile扩充内存</a>
-        </h2>
-
-        <div class="post-meta">
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-calendar"></i>
-              </span>
-              <span class="post-meta-item-text">发表于</span>
-
-              <time title="创建时间：2020-07-01 21:30:26" itemprop="dateCreated datePublished" datetime="2020-07-01T21:30:26+08:00">2020-07-01</time>
-            </span>
-              <span class="post-meta-item">
-                <span class="post-meta-item-icon">
-                  <i class="far fa-calendar-check"></i>
-                </span>
-                <span class="post-meta-item-text">更新于</span>
-                <time title="修改时间：2020-07-02 20:50:34" itemprop="dateModified" datetime="2020-07-02T20:50:34+08:00">2020-07-02</time>
-              </span>
-            <span class="post-meta-item">
-              <span class="post-meta-item-icon">
-                <i class="far fa-folder"></i>
-              </span>
-              <span class="post-meta-item-text">分类于</span>
-                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
-                  <a href="/categories/linux%E4%BD%BF%E7%94%A8/" itemprop="url" rel="index"><span itemprop="name">linux使用</span></a>
-                </span>
-            </span>
-
-          <br>
-            <span class="post-meta-item" title="本文字数">
-              <span class="post-meta-item-icon">
-                <i class="far fa-file-word"></i>
-              </span>
-                <span class="post-meta-item-text">本文字数：</span>
-              <span>1.2k</span>
-            </span>
-            <span class="post-meta-item" title="阅读时长">
-              <span class="post-meta-item-icon">
-                <i class="far fa-clock"></i>
-              </span>
-                <span class="post-meta-item-text">阅读时长 &asymp;</span>
-              <span>1 分钟</span>
-            </span>
-
-        </div>
-      </header>
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-          <p>在linux中进行编译时，可能会因为内存不足导致编译失败，比如<code>go build</code>不成功报<code>signal: killed</code>，或者在编译C/C++时<code>ld</code>报错<code>ld terminated with signal 9</code>。这时在不方便添加物理内存和重新分区的情况下，可以通过<code>swapfile</code>临时扩充内存。</p>
-<h2 id="创建swapfile"><a href="#创建swapfile" class="headerlink" title="创建swapfile"></a>创建swapfile</h2><p>这里有两种方式可以创建<code>swapfile</code>，一种是通过<code>dd</code>命令，另一种是使用<code>fallocate</code>命令。这两个的区别在于<code>fallocate</code>只进行空间分配而不初始化，所以速度很快；另外有些情况下不支持<code>fallocate</code>操作，而只能选择dd。</p>
-<blockquote>
-<p>FALLOCATE(1)<br>fallocate  is  used to manipulate the allocated disk space for a file, either to deallocate or preallocate it.  For filesystems which support the fallocate system call,preallocation is done quickly by allocating blocks and marking them as uninitialized, requiring no IO to the data blocks.  This is much faster than creating a  file  by filling it with zeroes.</p>
-</blockquote>
-<h3 id="使用dd创建swapfile"><a href="#使用dd创建swapfile" class="headerlink" title="使用dd创建swapfile"></a>使用dd创建swapfile</h3><p><code>dd</code>命令是Unix和类Unix系统中的一个实用工具，用于将字节从输入经过一定的转换复制到输出中，输入输出都可以是任意的文件或设备。生成一个8GB的<code>swapfile</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">dd if&#x3D;&#x2F;dev&#x2F;zero of&#x3D;swapfile.8G bs&#x3D;1MiB count&#x3D;8192</span><br></pre></td></tr></table></figure>
-<p>dd参数意义</p>
-<ul>
-<li>if 输入，使用/dev/zero将swapfile内部填充’0’</li>
-<li>of 输出</li>
-<li>bs 按块拷贝，每块的大小</li>
-<li>count 拷贝的块数</li>
-</ul>
-<h3 id="使用fallocate创建swapfile"><a href="#使用fallocate创建swapfile" class="headerlink" title="使用fallocate创建swapfile"></a>使用fallocate创建swapfile</h3><p>使用<code>fallocate</code>命令快速生成<code>swapfile</code></p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">fallocate -l 8G swapfile.8GB</span><br></pre></td></tr></table></figure>
-<p>fallocate参数意义</p>
-<ul>
-<li>-l 生成文件的长度，可以使用K、M、G等单位</li>
-</ul>
-<h2 id="修改swapfile权限"><a href="#修改swapfile权限" class="headerlink" title="修改swapfile权限"></a>修改swapfile权限</h2><p><code>swapfile</code>用于交换内存数据，所以安全起见更正文件权限</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">chmod 0600 swapfile.8GB</span><br></pre></td></tr></table></figure>
-
-<h2 id="设置交换分区"><a href="#设置交换分区" class="headerlink" title="设置交换分区"></a>设置交换分区</h2><p>将文件设置为交换分区</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">mkswap swapfile.8GB</span><br></pre></td></tr></table></figure>
-
-<h2 id="挂载交换分区"><a href="#挂载交换分区" class="headerlink" title="挂载交换分区"></a>挂载交换分区</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">swapon swapfile.8GB</span><br></pre></td></tr></table></figure>
-<p>可以通过<code>free</code>命令查看交换分区是否正常使用</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">free -h</span><br></pre></td></tr></table></figure>
-<p>8G的交换分区已挂载👇<br><img src="https://i.loli.net/2020/07/02/FOHizSKNsnQ9XLD.png" alt="WechatIMG136.png"></p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本文介绍了如何使用<code>swapfile</code>增加交换分区，从而解决内存不足导致的各种问题。在支持的情况下，首选使用<code>fallocate</code>快速创建<code>swapfile</code>文件。另外，<code>swapon</code>挂载交换分区在重启后需要再次手动挂载，可以在<code>/etc/fstab</code>文件中添加挂载项，实现开机自动挂载。</p>
-
-      
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2020/07/01/linux-extend-memory-using-swapfile/" rel="prev" title="Linux利用swapfile扩充内存">
+      <i class="fa fa-chevron-left"></i> Linux利用swapfile扩充内存
+    </a></div>
+      <div class="post-nav-item"></div>
     </div>
-
-    
-    
-    
-      <footer class="post-footer">
-        <div class="post-eof"></div>
       </footer>
+    
   </article>
   
   
-  
-
-
   
 
 
 
           </div>
           
+    <div class="comments" id="gitalk-container"></div>
 
 <script>
   window.addEventListener('tabs:register', () => {
@@ -509,6 +430,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#部署Traefik"><span class="nav-number">1.</span> <span class="nav-text">部署Traefik</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#生成证书文件"><span class="nav-number">2.</span> <span class="nav-text">生成证书文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#生成CA"><span class="nav-number">2.1.</span> <span class="nav-text">生成CA</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#生成服务器证书-amp-秘钥"><span class="nav-number">2.2.</span> <span class="nav-text">生成服务器证书&amp;秘钥</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Demo"><span class="nav-number">3.</span> <span class="nav-text">Demo</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#服务端"><span class="nav-number">3.1.</span> <span class="nav-text">服务端</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#客户端"><span class="nav-number">3.2.</span> <span class="nav-text">客户端</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Demo部署"><span class="nav-number">4.</span> <span class="nav-text">Demo部署</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#制作镜像"><span class="nav-number">4.1.</span> <span class="nav-text">制作镜像</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#部署服务"><span class="nav-number">4.2.</span> <span class="nav-text">部署服务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#访问服务"><span class="nav-number">4.3.</span> <span class="nav-text">访问服务</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
@@ -645,6 +567,25 @@
 
   
 
+<link rel="stylesheet" href="//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.css">
+
+<script>
+NexT.utils.loadComments(document.querySelector('#gitalk-container'), () => {
+  NexT.utils.getScript('//cdn.jsdelivr.net/npm/gitalk@1/dist/gitalk.min.js', () => {
+    var gitalk = new Gitalk({
+      clientID    : 'e56df557d09ca18d606c',
+      clientSecret: '3abc5654a085065d10a44995fbdac833d8af7d91',
+      repo        : 'byc.github.io',
+      owner       : 'BYC',
+      admin       : ['BYC'],
+      id          : 'c8e597c0b6861ed4f5c39e7d1618af86',
+        language: 'zh-CN',
+      distractionFreeMode: true
+    });
+    gitalk.render('gitalk-container');
+  }, window.Gitalk);
+});
+</script>
 
 </body>
 </html>
