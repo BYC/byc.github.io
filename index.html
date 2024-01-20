@@ -168,6 +168,103 @@
   
   
   <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
+    <link itemprop="mainEntityOfPage" href="http://byc.github.io/2024/01/20/delete-terminating-resources/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.png">
+      <meta itemprop="name" content="BYC">
+      <meta itemprop="description" content="学吧，学无止境">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="卡车斯基">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          
+            <a href="/2024/01/20/delete-terminating-resources/" class="post-title-link" itemprop="url">删除K8S集群中无法删除的资源</a>
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-calendar"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+              
+
+              <time title="创建时间：2024-01-20 09:19:02 / 修改时间：10:01:41" itemprop="dateCreated datePublished" datetime="2024-01-20T09:19:02+08:00">2024-01-20</time>
+            </span>
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="far fa-folder"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/kubernetes/" itemprop="url" rel="index"><span itemprop="name">kubernetes</span></a>
+                </span>
+            </span>
+
+          <br>
+            <span class="post-meta-item" title="本文字数">
+              <span class="post-meta-item-icon">
+                <i class="far fa-file-word"></i>
+              </span>
+                <span class="post-meta-item-text">本文字数：</span>
+              <span>1k</span>
+            </span>
+            <span class="post-meta-item" title="阅读时长">
+              <span class="post-meta-item-icon">
+                <i class="far fa-clock"></i>
+              </span>
+                <span class="post-meta-item-text">阅读时长 &asymp;</span>
+              <span>1 分钟</span>
+            </span>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+          <h2 id="删除资源"><a href="#删除资源" class="headerlink" title="删除资源"></a>删除资源</h2><p>在K8S集群中，使用<code>kubectl delete</code>删除资源</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl delete serviceaccount calico-cni-plugin -n calico-system</span><br></pre></td></tr></table></figure>
+
+<p>删除过程卡主，<code>Ctrl^C</code>后资源还存在👇<br><img src="https://i.miji.bid/2024/01/20/2ad6936487e669d97dafcb8b34ae9995.png" alt="2ad6936487e669d97dafcb8b34ae9995.png"></p>
+<h2 id="查看finalizers"><a href="#查看finalizers" class="headerlink" title="查看finalizers"></a>查看<code>finalizers</code></h2><p>查看删除不掉的资源，并用<code>yaml</code>格式导出</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">kubectl get serviceaccount calico-cni-plugin -n calico-system -o yaml</span><br></pre></td></tr></table></figure>
+
+<p>该资源存在<code>finalizers</code>，需要先删除👇<br><img src="https://i.miji.bid/2024/01/20/5201d17ef1fb31e6a157c1cd8ff8fad6.png" alt="5201d17ef1fb31e6a157c1cd8ff8fad6.png"><br><code>calico</code>相关资源无法删除可能涉及以下BUG</p>
+<blockquote>
+<p>This is an upstream Kubernetes (not AKS) issue. We can confirm this impacts 1.11.x - I believe this is the main upstream bug tracking this <a href="https://github.com/kubernetes/kubernetes/issues/60807" target="_blank" rel="noopener">kubernetes/kubernetes#60807</a> however there are many bugs filed tracking this same behavior with the finalizers.<br>We will be unable to resolve this until a new upstream release which addresses this issue is released by the Kubernetes team. Marking as a known issue.</p>
+</blockquote>
+<h2 id="删除finalizers"><a href="#删除finalizers" class="headerlink" title="删除finalizers"></a>删除<code>finalizers</code></h2><p>既然知道是由于<code>finalizers</code>导致删除过程卡主，可以直接使用<code>kubectl patch</code>命令更新资源，删除该字段</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">kubectl patch -n calico-system ServiceAccount&#x2F;calico-cni-plugin --type json \</span><br><span class="line">  --patch&#x3D;&#39;[&#123;&quot;op&quot;:&quot;remove&quot;,&quot;path&quot;:&quot;&#x2F;metadata&#x2F;finalizers&quot;&#125;]&#39;</span><br></pre></td></tr></table></figure>
+<p>更新后<code>calico-cni-plugin</code>的删除就直接完成了</p>
+<p>这个方法，对于删除后一直处于<code>terminating</code>状态的<code>namespace</code>也适用</p>
+<h2 id="引用"><a href="#引用" class="headerlink" title="引用"></a>引用</h2><p><a href="https://tinychen.com/20230201-k8s-15-migrate-cni-from-calico-to-cilium/" target="_blank" rel="noopener">k8s系列15-calico有损迁移至cilium</a><br><a href="https://www.redhat.com/sysadmin/troubleshooting-terminating-namespaces" target="_blank" rel="noopener">How to fix Kubernetes namespaces stuck in the terminating state</a></p>
+
+      
+    </div>
+
+    
+    
+    
+      <footer class="post-footer">
+        <div class="post-eof"></div>
+      </footer>
+  </article>
+  
+  
+  
+
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block" lang="zh-CN">
     <link itemprop="mainEntityOfPage" href="http://byc.github.io/2024/01/16/check-static-pods/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -719,20 +816,20 @@
       <div class="site-state-item site-state-posts">
           <a href="/archives/">
         
-          <span class="site-state-item-count">4</span>
+          <span class="site-state-item-count">5</span>
           <span class="site-state-item-name">日志</span>
         </a>
       </div>
       <div class="site-state-item site-state-categories">
             <a href="/categories/">
           
-        <span class="site-state-item-count">5</span>
+        <span class="site-state-item-count">6</span>
         <span class="site-state-item-name">分类</span></a>
       </div>
       <div class="site-state-item site-state-tags">
             <a href="/tags/">
           
-        <span class="site-state-item-count">8</span>
+        <span class="site-state-item-count">10</span>
         <span class="site-state-item-name">标签</span></a>
       </div>
   </nav>
@@ -779,12 +876,12 @@
     <span class="post-meta-item-icon">
       <i class="fa fa-chart-area"></i>
     </span>
-    <span title="站点总字数">14k</span>
+    <span title="站点总字数">15k</span>
     <span class="post-meta-divider">|</span>
     <span class="post-meta-item-icon">
       <i class="fa fa-coffee"></i>
     </span>
-    <span title="站点阅读时长">13 分钟</span>
+    <span title="站点阅读时长">14 分钟</span>
 </div>
   <div class="powered-by">由 <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a> & <a href="https://pisces.theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Pisces</a> 强力驱动
   </div>
