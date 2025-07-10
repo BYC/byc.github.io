@@ -24,7 +24,7 @@
 
   <meta name="description" content="直接由特定节点上的kubelet进程来管理，不通过 master 节点上的apiserver。无法与我们常用的控制器Deployment或者DaemonSet进行关联，它由kubelet进程自己来监控，当pod崩溃时重启该pod，kubelete也无法对他们进行健康检查。在K8S集群，可以通过kubectl命令查看容器是否为静态Pod 查找对应容器查看kube-system命名空间下的所有Pod">
 <meta property="og:type" content="article">
-<meta property="og:title" content="如何判断静态容">
+<meta property="og:title" content="如何判断静态容器">
 <meta property="og:url" content="http://byc.github.io/2024/01/16/check-static-pods/index.html">
 <meta property="og:site_name" content="卡车斯基">
 <meta property="og:description" content="直接由特定节点上的kubelet进程来管理，不通过 master 节点上的apiserver。无法与我们常用的控制器Deployment或者DaemonSet进行关联，它由kubelet进程自己来监控，当pod崩溃时重启该pod，kubelete也无法对他们进行健康检查。在K8S集群，可以通过kubectl命令查看容器是否为静态Pod 查找对应容器查看kube-system命名空间下的所有Pod">
@@ -32,7 +32,7 @@
 <meta property="og:image" content="https://s11.ax1x.com/2024/01/15/pFixyzq.png">
 <meta property="og:image" content="https://s11.ax1x.com/2024/01/15/pFixXwD.png">
 <meta property="article:published_time" content="2024-01-16T13:29:56.000Z">
-<meta property="article:modified_time" content="2024-01-16T13:44:47.465Z">
+<meta property="article:modified_time" content="2025-07-10T14:18:32.998Z">
 <meta property="article:author" content="BYC">
 <meta property="article:tag" content="kubernetes">
 <meta property="article:tag" content="static pod">
@@ -52,7 +52,7 @@
   };
 </script>
 
-  <title>如何判断静态容 | 卡车斯基</title>
+  <title>如何判断静态容器 | 卡车斯基</title>
   
 
 
@@ -186,7 +186,7 @@
     </span>
       <header class="post-header">
         <h1 class="post-title" itemprop="name headline">
-          如何判断静态容
+          如何判断静态容器
         </h1>
 
         <div class="post-meta">
@@ -195,10 +195,16 @@
                 <i class="far fa-calendar"></i>
               </span>
               <span class="post-meta-item-text">发表于</span>
-              
 
-              <time title="创建时间：2024-01-16 21:29:56 / 修改时间：21:44:47" itemprop="dateCreated datePublished" datetime="2024-01-16T21:29:56+08:00">2024-01-16</time>
+              <time title="创建时间：2024-01-16 21:29:56" itemprop="dateCreated datePublished" datetime="2024-01-16T21:29:56+08:00">2024-01-16</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="far fa-calendar-check"></i>
+                </span>
+                <span class="post-meta-item-text">更新于</span>
+                <time title="修改时间：2025-07-10 22:18:32" itemprop="dateModified" datetime="2025-07-10T22:18:32+08:00">2025-07-10</time>
+              </span>
             <span class="post-meta-item">
               <span class="post-meta-item-icon">
                 <i class="far fa-folder"></i>
@@ -259,7 +265,7 @@
   </li>
   <li class="post-copyright-link">
     <strong>本文链接：</strong>
-    <a href="http://byc.github.io/2024/01/16/check-static-pods/" title="如何判断静态容">http://byc.github.io/2024/01/16/check-static-pods/</a>
+    <a href="http://byc.github.io/2024/01/16/check-static-pods/" title="如何判断静态容器">http://byc.github.io/2024/01/16/check-static-pods/</a>
   </li>
   <li class="post-copyright-license">
     <strong>版权声明： </strong>本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/zh-CN" rel="noopener" target="_blank"><i class="fab fa-fw fa-creative-commons"></i>BY-NC-SA</a> 许可协议。转载请注明出处！
@@ -413,7 +419,7 @@
 <div class="copyright">
   
   &copy; 
-  <span itemprop="copyrightYear">2024</span>
+  <span itemprop="copyrightYear">2025</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
